@@ -915,14 +915,18 @@ async function connectSheet() {
 
 async function fetchAndRender(url) {
   try {
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error('Could not fetch sheet');
+    const resp = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+    if (!resp.ok) throw new Error(`Sheet returned HTTP ${resp.status}. Check it's published to web as CSV.`);
     const text = await resp.text();
+    if (text.trim().startsWith('<')) {
+      throw new Error('Got an HTML page instead of CSV — the publish link may have expired. Re-publish your Sheet.');
+    }
     allProducts = parseCSV(text);
-    if (allProducts.length === 0) throw new Error('No data found in sheet');
+    if (allProducts.length === 0) throw new Error('Sheet loaded but contained no product rows.');
     renderAll();
     setStatus('ok', `${allProducts.length} products • Updated just now`);
   } catch(e) {
+    console.error('Dashboard load error:', e);
     setStatus('error', 'Connection failed');
     showError(e.message);
   }
@@ -1246,14 +1250,16 @@ function switchTab(name) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
+// Default Sheet — auto-loads for any visitor with zero setup.
+// Change this if you ever republish your Sheet with a new link.
+const DEFAULT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAZgZmPxPiEjKDit1ZKjr1BYdt3MkBy94hp_eNYyZdf4pQEokSVjYbd4Xp6zKDfp7pMNR33KE12vhO/pub?gid=1210679381&single=true&output=csv";
+
 window.addEventListener('load', () => {
-  const saved = localStorage.getItem('ucb_csv_url');
-  if (saved) {
-    document.getElementById('csvUrlInput').value = saved;
-    document.getElementById('setupModal').style.display = 'none';
-    setStatus('loading', 'Loading...');
-    fetchAndRender(saved);
-  }
+  const saved = localStorage.getItem('ucb_csv_url') || DEFAULT_CSV_URL;
+  document.getElementById('csvUrlInput').value = saved;
+  document.getElementById('setupModal').style.display = 'none';
+  setStatus('loading', 'Loading...');
+  fetchAndRender(saved);
 });
 </script>
 </body>
