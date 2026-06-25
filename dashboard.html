@@ -1184,13 +1184,6 @@ function filterBrands(q) { applyBrandFilters(); }
 function filterByCategory(cat) { applyBrandFilters(); }
 function filterByGender(gender) { applyBrandFilters(); }
 function filterBySeason(status) { applyBrandFilters(); }
-  renderBrandCards(filtered);
-}
-
-function filterBySeason(status) {
-  const filtered = status ? allProducts.filter(p => p.seasonStatus === status) : allProducts;
-  renderBrandCards(filtered);
-}
 
 function filterTable(tableId, q) {
   const rows = document.querySelectorAll(`#${tableId} tbody tr`);
@@ -1251,15 +1244,20 @@ function switchTab(name) {
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 // Default Sheet — auto-loads for any visitor with zero setup.
-// Change this if you ever republish your Sheet with a new link.
-const DEFAULT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQAZgZmPxPiEjKDit1ZKjr1BYdt3MkBy94hp_eNYyZdf4pQEokSVjYbd4Xp6zKDfp7pMNR33KE12vhO/pub?gid=1210679381&single=true&output=csv";
+// Uses Google's gviz/tq endpoint instead of publish-to-web CSV —
+// gviz sends proper CORS headers so fetch() works from any domain (e.g. GitHub Pages).
+// Requires the Sheet's general access to be "Anyone with the link" (Viewer).
+const DEFAULT_CSV_URL = "https://docs.google.com/spreadsheets/d/1MbpXe-OOScp7YQy_RTgTglYW7Wnu7GtxvF3rJbfueLQ/gviz/tq?tqx=out:csv&gid=1210679381";
 
 window.addEventListener('load', () => {
-  const saved = localStorage.getItem('ucb_csv_url') || DEFAULT_CSV_URL;
-  document.getElementById('csvUrlInput').value = saved;
+  const saved = localStorage.getItem('ucb_csv_url');
+  // If a previously saved link doesn't end in output=csv, it's stale/broken — discard it
+  const url = (saved && saved.includes('output=csv')) ? saved : DEFAULT_CSV_URL;
+  localStorage.setItem('ucb_csv_url', url);
+  document.getElementById('csvUrlInput').value = url;
   document.getElementById('setupModal').style.display = 'none';
   setStatus('loading', 'Loading...');
-  fetchAndRender(saved);
+  fetchAndRender(url);
 });
 </script>
 </body>
