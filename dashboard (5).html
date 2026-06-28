@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UCB Competitor Intelligence Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ucb-green: #00703C;
+    --ucb-green-dark: #005a30;
+    --ucb-teal: #00A896;
+    --ucb-light: #F0F7F4;
+    --ucb-white: #FFFFFF;
+    --ucb-dark: #1A2E25;
+    --ucb-mid: #6B8F7E;
+    --ucb-border: #D4E8DF;
+    --ucb-amber: #F5A623;
+    --ucb-red: #E53935;
+    --ucb-blue: #1976D2;
+    --shadow-sm: 0 1px 3px rgba(0,112,60,0.08);
+    --shadow-md: 0 4px 16px rgba(0,112,60,0.12);
+    --radius: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--ucb-light);
+    color: var(--ucb-dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--ucb-green);
+    color: white;
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ucb-logo {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    color: white;
+  }
+
+  .ucb-logo span {
+    background: white;
+    color: var(--ucb-green);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+
+  .header-subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 400;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 16px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4ade80;
+    animation: pulse 2s infinite;
+  }
+
+  .pulse-dot.error { background: #f87171; animation: none; }
+  .pulse-dot.loading { background: var(--ucb-amber); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  .sheet-input-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+  }
+  .sheet-input-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── SETUP MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 540px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .modal h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ucb-dark);
+    margin-bottom: 8px;
+  }
+
+  .modal p {
+    font-size: 14px;
+    color: var(--ucb-mid);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  .modal label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ucb-dark);
+    margin-bottom: 6px;
+  }
+
+  .modal input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--ucb-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--ucb-dark);
+    margin-bottom: 8px;
+    transition: border-color 0.2s;
+  }
+  .modal input:focus { outline: none; border-color: var(--ucb-green); }
+
+  .modal-hint {
+    font-size: 12px;
+    color: var(--ucb-mid);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .modal-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--ucb-green);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .modal-btn:hover { background: var(--ucb-green-dark); }
+
+  .modal-demo {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ucb-mid);
+  }
+  .modal-demo a { color: var(--ucb-teal); cursor: pointer; text-decoration: none; }
+  .modal-demo a:hover { text-decoration: underline; }
+
+  /* ── TABS ── */
+  .tabs-bar {
+    background: white;
+    border-bottom: 1px solid var(--ucb-border);
+    padding: 0 32px;
+    display: flex;
+    gap: 4px;
+    position: sticky;
+    top: 64px;
+    z-index: 90;
+  }
+
+  .tab {
+    padding: 16px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ucb-mid);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab:hover { color: var(--ucb-green); }
+  .tab.active { color: var(--ucb-green); border-bottom-color: var(--ucb-green); font-weight: 600; }
+
+  .tab-badge {
+    background: var(--ucb-light);
+    color: var(--ucb-mid);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 6px;
+    font-weight: 600;
+  }
+  .tab.active .tab-badge { background: #e8f5ee; color: var(--ucb-green); }
+
+  /* ── MAIN CONTENT ── */
+  .main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── SUMMARY BAR ── */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--ucb-border);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ucb-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ucb-dark);
+  }
+
+  .stat-value.green { color: var(--ucb-green); }
+  .stat-value.amber { color: var(--ucb-amber); }
+  .stat-value.teal { color: var(--ucb-teal); }
+
+  /* ── FILTERS ── */
+  .filters-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-select, .search-input {
+    padding: 9px 14px;
+    border: 1.5px solid var(--ucb-border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    color: var(--ucb-dark);
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .filter-select:focus, .search-input:focus { outline: none; border-color: var(--ucb-green); }
+  .search-input { min-width: 220px; }
+
+  .filter-label {
+    font-size: 12px;
+    color: var(--ucb-mid);
+    font-weight: 500;
+  }
+
+  /* ── DEPARTMENT TOGGLE ── */
+  .dept-toggle {
+    display: inline-flex;
+    background: var(--ucb-light);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .dept-btn {
+    padding: 9px 24px;
+    border: none;
+    background: transparent;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ucb-mid);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+  }
+  .dept-btn:hover { color: var(--ucb-green); }
+  .dept-btn.active {
+    background: var(--ucb-green);
+    color: white;
+    box-shadow: 0 2px 6px rgba(0,112,60,0.25);
+  }
+
+  /* ── TAXONOMY BUTTON ROWS (Category / Subcategory) ── */
+  .taxonomy-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+    min-height: 0;
+  }
+
+  .taxonomy-row:empty { margin-bottom: 0; }
+
+  .taxonomy-btn {
+    padding: 7px 16px;
+    border: 1.5px solid var(--ucb-border);
+    background: white;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ucb-dark);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .taxonomy-btn:hover { border-color: var(--ucb-green); color: var(--ucb-green); }
+  .taxonomy-btn.active {
+    background: var(--ucb-green);
+    border-color: var(--ucb-green);
+    color: white;
+  }
+
+  .taxonomy-row.sub .taxonomy-btn {
+    font-size: 12px;
+    padding: 6px 14px;
+    background: var(--ucb-light);
+    border-color: transparent;
+  }
+  .taxonomy-row.sub .taxonomy-btn:hover { background: white; border-color: var(--ucb-teal); color: var(--ucb-teal); }
+  .taxonomy-row.sub .taxonomy-btn.active {
+    background: var(--ucb-teal);
+    color: white;
+  }
+
+  /* ── BRAND CARDS ── */
+  .brand-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .brand-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--ucb-border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .brand-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+  .brand-card-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ucb-border);
+  }
+
+  .brand-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ucb-dark);
+  }
+
+  .brand-count {
+    font-size: 12px;
+    color: var(--ucb-mid);
+    background: var(--ucb-light);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+
+  .brand-card-body { padding: 16px 20px; }
+
+  .brand-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+    border-bottom: 1px solid var(--ucb-border);
+  }
+  .brand-stat-row:last-child { border-bottom: none; }
+
+  .brand-stat-key { color: var(--ucb-mid); }
+  .brand-stat-val { font-weight: 600; color: var(--ucb-dark); font-family: 'DM Sans', sans-serif; }
+  .brand-stat-val.price { font-family: monospace; font-size: 14px; color: var(--ucb-green); }
+  .brand-stat-val.licensed { color: var(--ucb-teal); }
+
+  .brand-cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .cat-tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 12px;
+    background: var(--ucb-light);
+    color: var(--ucb-green);
+    font-weight: 500;
+  }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--ucb-border);
+    box-shadow: var(--shadow-sm);
+    overflow: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--ucb-mid);
+    background: var(--ucb-light);
+    border-bottom: 1px solid var(--ucb-border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--ucb-green); }
+
+  tbody tr { border-bottom: 1px solid var(--ucb-border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #f8fdf9; }
+
+  td { padding: 12px 16px; color: var(--ucb-dark); vertical-align: middle; }
+
+  .td-brand {
+    font-weight: 600;
+    color: var(--ucb-dark);
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .td-price {
+    font-family: monospace;
+    font-size: 13px;
+    color: var(--ucb-green);
+    font-weight: 600;
+  }
+
+  .td-discount {
+    font-weight: 600;
+    color: var(--ucb-red);
+  }
+
+  .td-link a {
+    color: var(--ucb-teal);
+    text-decoration: none;
+    font-size: 12px;
+  }
+  .td-link a:hover { text-decoration: underline; }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-licensed { background: #e8f8f6; color: var(--ucb-teal); }
+  .badge-new { background: #e8f5ee; color: var(--ucb-green); }
+  .badge-latest { background: #e8f5ee; color: var(--ucb-green); }
+  .badge-old { background: #f0f0f0; color: var(--ucb-mid); }
+  .badge-girls { background: #fce4ec; color: #c2185b; }
+  .badge-boys { background: #e3f2fd; color: #1565c0; }
+  .badge-kids { background: var(--ucb-light); color: var(--ucb-mid); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--ucb-mid);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .empty-state h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ucb-dark);
+    margin-bottom: 8px;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 360px;
+    margin: 0 auto 20px;
+  }
+
+  .empty-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background: var(--ucb-green);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ── LOADING ── */
+  .loading-bar {
+    background: white;
+    border-radius: var(--radius);
+    padding: 60px;
+    text-align: center;
+    border: 1px solid var(--ucb-border);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--ucb-border);
+    border-top-color: var(--ucb-green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-size: 14px;
+    color: var(--ucb-mid);
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ucb-dark);
+    margin-bottom: 4px;
+  }
+
+  .section-sub {
+    font-size: 13px;
+    color: var(--ucb-mid);
+    margin-bottom: 20px;
+  }
+
+  /* ── LICENSED CARDS ── */
+  .licensed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+
+  .licensed-card {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--ucb-border);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .licensed-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .licensed-name {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ucb-dark);
+    line-height: 1.4;
+    flex: 1;
+    margin-right: 12px;
+  }
+
+  .licensed-price {
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ucb-green);
+    white-space: nowrap;
+  }
+
+  .licensed-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* ── ARRIVALS TILE GRID ── */
+  .arrivals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+  }
+
+  .arrival-tile {
+    background: white;
+    border-radius: var(--radius);
+    border: 1px solid var(--ucb-border);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .arrival-tile:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+  .arrival-tile-img-wrap {
+    width: 100%;
+    aspect-ratio: 3/4;
+    background: var(--ucb-light);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .arrival-tile-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .arrival-tile-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: var(--ucb-green);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .arrival-tile-badge.old { background: var(--ucb-mid); }
+
+  .arrival-tile-noimg {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ucb-mid);
+    font-size: 32px;
+  }
+
+  .arrival-tile-body {
+    padding: 12px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .arrival-tile-brand {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ucb-green);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .arrival-tile-name {
+    font-size: 13px;
+    color: var(--ucb-dark);
+    line-height: 1.4;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .arrival-tile-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .arrival-tile-price {
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--ucb-dark);
+  }
+
+  .arrival-tile-link {
+    font-size: 11px;
+    color: var(--ucb-teal);
+    text-decoration: none;
+  }
+  .arrival-tile-link:hover { text-decoration: underline; }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .page-btn {
+    padding: 8px 14px;
+    border: 1.5px solid var(--ucb-border);
+    border-radius: 6px;
+    background: white;
+    color: var(--ucb-dark);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .page-btn:hover { border-color: var(--ucb-green); color: var(--ucb-green); }
+  .page-btn.active { background: var(--ucb-green); color: white; border-color: var(--ucb-green); }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .page-info { font-size: 13px; color: var(--ucb-mid); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .header { padding: 0 16px; }
+    .header-subtitle { display: none; }
+    .main { padding: 16px; }
+    .tabs-bar { padding: 0 16px; overflow-x: auto; }
+    .summary-bar { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <h2>Connect your Google Sheet</h2>
+    <p>Paste the published CSV link from your <strong>All Products</strong> tab. The dashboard will read live data from it every time you open it.</p>
+
+    <label>Google Sheet CSV URL</label>
+    <input type="text" id="csvUrlInput" placeholder="https://docs.google.com/spreadsheets/d/.../pub?gid=...&single=true&output=csv">
+    <div class="modal-hint">
+      How to get this link: Open your Google Sheet → File → Share → Publish to web → select "All Products" tab → CSV → Publish → copy the link.
+    </div>
+
+    <button class="modal-btn" onclick="connectSheet()">Connect & Load Data</button>
+    <div class="modal-demo">
+      Just exploring? <a onclick="loadDemoData()">Load demo data instead</a>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="ucb-logo"><span>UCB</span> Competitor Intelligence</div>
+    <div class="header-subtitle">Kids & Youth Market Monitor</div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="pulse-dot" id="statusDot"></div>
+      <span id="statusText">Not connected</span>
+    </div>
+    <button class="sheet-input-btn" onclick="document.getElementById('setupModal').style.display='flex'">⚙ Change Sheet</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs-bar">
+  <div class="tab active" onclick="switchTab('brands')" id="tab-brands">
+    Brand Overview <span class="tab-badge" id="badge-brands">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('prices')" id="tab-prices">
+    Price Matrix <span class="tab-badge" id="badge-prices">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('arrivals')" id="tab-arrivals">
+    New Arrivals <span class="tab-badge" id="badge-arrivals">0</span>
+  </div>
+  <div class="tab" onclick="switchTab('licensed')" id="tab-licensed">
+    Licensed Products <span class="tab-badge" id="badge-licensed">0</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ── TAB 1: BRAND OVERVIEW ── -->
+  <div class="tab-panel active" id="panel-brands">
+    <div class="summary-bar">
+      <div class="stat-card">
+        <div class="stat-label">Total Products Tracked</div>
+        <div class="stat-value green" id="stat-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Brands Monitored</div>
+        <div class="stat-value" id="stat-brands">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Licensed Products</div>
+        <div class="stat-value teal" id="stat-licensed">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Last Updated</div>
+        <div class="stat-value" style="font-size:16px;margin-top:4px" id="stat-updated">—</div>
+      </div>
+    </div>
+
+    <div class="filters-row">
+      <span class="filter-label">Filter:</span>
+      <input type="text" class="search-input" placeholder="Search brand or product..." oninput="filterBrands(this.value)" id="brandSearch">
+      <select class="filter-select" onchange="filterByCategory(this.value)" id="catFilter">
+        <option value="">All Categories</option>
+      </select>
+      <select class="filter-select" onchange="filterByGender(this.value)">
+        <option value="">All Genders</option>
+        <option value="Girls">Girls</option>
+        <option value="Boys">Boys</option>
+        <option value="Kids">Kids</option>
+      </select>
+      <select class="filter-select" onchange="filterBySeason(this.value)" id="seasonFilter">
+        <option value="">All Seasons</option>
+        <option value="Latest Season">🟢 Latest Season</option>
+        <option value="Old Season">⚪ Old Season</option>
+      </select>
+    </div>
+
+    <div id="brandCardsContainer">
+      <div class="loading-bar"><div class="spinner"></div><div class="loading-text">Connect your Google Sheet to load data</div></div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: PRICE MATRIX ── -->
+  <div class="tab-panel" id="panel-prices">
+    <div class="section-title">Price Matrix</div>
+    <div class="section-sub">Compare price ranges across all brands and categories. Click column headers to sort.</div>
+
+    <div class="filters-row">
+      <input type="text" class="search-input" placeholder="Search brand or category..." oninput="filterTable('priceTable', this.value)">
+      <select class="filter-select" onchange="filterTableByCol('priceTable', 0, this.value)" id="brandFilterPrice">
+        <option value="">All Brands</option>
+      </select>
+      <select class="filter-select" onchange="filterTableByCol('priceTable', 1, this.value)" id="catFilterPrice">
+        <option value="">All Categories</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table id="priceTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable('priceTable',0)">Brand ↕</th>
+            <th onclick="sortTable('priceTable',1)">Category ↕</th>
+            <th onclick="sortTable('priceTable',2)">Min Price (₹) ↕</th>
+            <th onclick="sortTable('priceTable',3)">Max Price (₹) ↕</th>
+            <th onclick="sortTable('priceTable',4)">Avg Price (₹) ↕</th>
+            <th onclick="sortTable('priceTable',5)"># Products ↕</th>
+          </tr>
+        </thead>
+        <tbody id="priceTableBody">
+          <tr><td colspan="6" style="text-align:center;padding:40px;color:var(--ucb-mid)">Connect your sheet to see price data</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: NEW ARRIVALS ── -->
+  <div class="tab-panel" id="panel-arrivals">
+    <div class="section-title">New Arrivals</div>
+    <div class="section-sub">Products added this month across all competitor brands, organised by UCB's merchandising taxonomy.</div>
+
+    <!-- Department toggle -->
+    <div class="dept-toggle" id="deptToggle">
+      <button class="dept-btn active" data-dept="" onclick="selectDepartment('')">All</button>
+      <button class="dept-btn" data-dept="Boys" onclick="selectDepartment('Boys')">Boys</button>
+      <button class="dept-btn" data-dept="Girls" onclick="selectDepartment('Girls')">Girls</button>
+    </div>
+
+    <!-- Category buttons (populated based on department) -->
+    <div class="taxonomy-row" id="categoryRow"></div>
+
+    <!-- Subcategory buttons (populated based on category) -->
+    <div class="taxonomy-row sub" id="subcategoryRow"></div>
+
+    <div class="filters-row">
+      <input type="text" class="search-input" placeholder="Search new arrivals..." oninput="filterArrivalTiles()" id="arrivalsSearch">
+      <select class="filter-select" onchange="filterArrivalTiles()" id="brandFilterArrivals">
+        <option value="">All Brands</option>
+      </select>
+      <select class="filter-select" onchange="filterArrivalTiles()" id="seasonFilterArrivals">
+        <option value="">All Seasons</option>
+        <option value="Latest Season">🟢 Latest Season</option>
+        <option value="Old Season">⚪ Old Season</option>
+      </select>
+      <select class="filter-select" onchange="filterArrivalTiles()" id="sortFilterArrivals">
+        <option value="">Sort: Default</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+      </select>
+    </div>
+
+    <div id="arrivalsGrid" class="arrivals-grid">
+      <div class="empty-state">
+        <div class="empty-icon">🆕</div>
+        <h3>No new arrivals yet</h3>
+        <p>Connect your sheet to see new arrivals</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: LICENSED ── -->
+  <div class="tab-panel" id="panel-licensed">
+    <div class="section-title">Licensed Products</div>
+    <div class="section-sub">Disney, Marvel, Barbie and other licensed collaborations across competitors.</div>
+
+    <div class="filters-row">
+      <input type="text" class="search-input" placeholder="Search license or brand..." oninput="filterLicensed(this.value)">
+      <select class="filter-select" onchange="filterLicensedByBrand(this.value)" id="brandFilterLicensed">
+        <option value="">All Brands</option>
+      </select>
+    </div>
+
+    <div id="licensedContainer">
+      <div class="loading-bar"><div style="text-align:center;color:var(--ucb-mid);padding:40px">Connect your sheet to see licensed products</div></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ── STATE ──────────────────────────────────────────────────────────────────
+let allProducts = [];
+let currentTab = 'brands';
+const ROWS_PER_PAGE = 100;
+
+const BRANDS = ['Zara','H&M','Uniqlo','M&S','OVS','USPA','Jack & Jones',
+                 'Tommy Hilfiger','Pepe Jeans','Vero Moda Girls','Peppermint','Ruff'];
+
+// ── DEMO DATA ──────────────────────────────────────────────────────────────
+function generateDemoData() {
+  // Mirrors the scraper's real taxonomy so demo mode looks representative
+  const taxonomy = {
+    Boys: {
+      Tops: ['T-Shirts','Polos','Shirts','Sweatshirts','Sweaters'],
+      Bottoms: ['Jeans','Trousers','Shorts'],
+      Outerwear: ['Jackets'],
+      Accessories: ['Caps','Neck Accessories'],
+    },
+    Girls: {
+      Tops: ['Tees','Tops','Polos','Sweatshirts','Sweaters'],
+      Bottoms: ['Jeans','Trousers','Shorts','Skirts'],
+      Dresses: ['Dresses','Sweatdresses'],
+      Outerwear: ['Jackets'],
+      'One Piece': ['Dungarees'],
+      Accessories: ['Caps','Neck Accessories'],
+    },
+  };
+  const departments = Object.keys(taxonomy);
+  const licenses = ['Disney','Marvel','Barbie','Paw Patrol','Frozen','No','No','No','No','No'];
+  const seasons = ['SS','AW'];
+  const data = [];
+  const today = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  const currentMonth = new Date().getMonth() + 1;
+  const currentSeason = [10,11,12,1,2].includes(currentMonth) ? 'AW' : 'SS';
+
+  BRANDS.forEach(brand => {
+    const count = Math.floor(Math.random() * 40) + 15;
+    for (let i = 0; i < count; i++) {
+      const department = departments[Math.floor(Math.random() * departments.length)];
+      const categories = Object.keys(taxonomy[department]);
+      const category = categories[Math.floor(Math.random() * categories.length)];
+      const subcats = taxonomy[department][category];
+      const subcategory = subcats[Math.floor(Math.random() * subcats.length)];
+      const price = Math.floor(Math.random() * 3500) + 499;  // MRP only — no discounted price in demo data
+      const lic = licenses[Math.floor(Math.random() * licenses.length)];
+      const isNew = Math.random() > 0.8 ? 'Yes' : 'No';
+      const season = seasons[Math.floor(Math.random() * seasons.length)];
+      const seasonStatus = season === currentSeason ? 'Latest Season' : 'Old Season';
+      data.push({
+        brand, name: `${brand} ${subcategory} Style ${i+1}`,
+        department, category, subcategory,
+        price: price.toString(), image: '',
+        url: '#', licensed: lic === 'No' ? 'No' : lic,
+        newArrival: isNew, gender: department, season, seasonStatus, scrapedOn: today
+      });
+    }
+  });
+  return data;
+}
+
+// ── CSV PARSER ─────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase());
+  const idx = {
+    brand: headers.indexOf('brand'),
+    name: headers.findIndex(h => h.includes('product')),
+    department: headers.indexOf('department'),
+    category: headers.findIndex(h => h === 'category'),
+    subcategory: headers.findIndex(h => h === 'subcategory'),
+    price: headers.findIndex(h => h.includes('price')),  // MRP only — single price column now
+    image: headers.findIndex(h => h.includes('image')),
+    url: headers.indexOf('url'),
+    licensed: headers.indexOf('licensed'),
+    newArrival: headers.findIndex(h => h.includes('new')),
+    gender: headers.indexOf('gender'),
+    season: headers.findIndex(h => h === 'season'),
+    seasonStatus: headers.findIndex(h => h.includes('season status')),
+    scrapedOn: headers.findIndex(h => h.includes('scraped'))
+  };
+
+  return lines.slice(1).map(line => {
+    const cols = line.match(/(".*?"|[^,]+|(?<=,)(?=,)|^(?=,)|(?<=,)$)/g) || [];
+    const get = (i) => i >= 0 ? (cols[i] || '').replace(/^"|"$/g,'').trim() : '';
+    return {
+      brand: get(idx.brand), name: get(idx.name),
+      department: get(idx.department), category: get(idx.category), subcategory: get(idx.subcategory),
+      price: get(idx.price), image: get(idx.image),
+      url: get(idx.url), licensed: get(idx.licensed),
+      newArrival: get(idx.newArrival), gender: get(idx.gender),
+      season: get(idx.season), seasonStatus: get(idx.seasonStatus),
+      scrapedOn: get(idx.scrapedOn)
+    };
+  }).filter(r => r.brand && r.name);
+}
+
+
+// ── CONNECT SHEET ──────────────────────────────────────────────────────────
+async function connectSheet() {
+  const url = document.getElementById('csvUrlInput').value.trim();
+  if (!url) { alert('Please paste your Google Sheet CSV URL'); return; }
+
+  localStorage.setItem('ucb_csv_url', url);
+  document.getElementById('setupModal').style.display = 'none';
+  setStatus('loading', 'Loading...');
+  await fetchAndRender(url);
+}
+
+async function fetchAndRender(url) {
+  try {
+    const resp = await fetch(url, { redirect: 'follow', cache: 'no-store' });
+    if (!resp.ok) throw new Error(`Sheet returned HTTP ${resp.status}. Check it's published to web as CSV.`);
+    const text = await resp.text();
+    if (text.trim().startsWith('<')) {
+      throw new Error('Got an HTML page instead of CSV — the publish link may have expired. Re-publish your Sheet.');
+    }
+    allProducts = parseCSV(text);
+    if (allProducts.length === 0) throw new Error('Sheet loaded but contained no product rows.');
+    renderAll();
+    setStatus('ok', `${allProducts.length} products • Updated just now`);
+  } catch(e) {
+    console.error('Dashboard load error:', e);
+    setStatus('error', 'Connection failed');
+    showError(e.message);
+  }
+}
+
+function loadDemoData() {
+  document.getElementById('setupModal').style.display = 'none';
+  allProducts = generateDemoData();
+  renderAll();
+  setStatus('ok', `${allProducts.length} demo products loaded`);
+}
+
+// ── STATUS ─────────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'pulse-dot' + (state === 'error' ? ' error' : state === 'loading' ? ' loading' : '');
+  txt.textContent = text;
+}
+
+function showError(msg) {
+  document.getElementById('brandCardsContainer').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">⚠️</div>
+      <h3>Could not load data</h3>
+      <p>${msg}. Make sure your sheet is published to web as CSV.</p>
+      <button class="empty-btn" onclick="document.getElementById('setupModal').style.display='flex'">Try Again</button>
+    </div>`;
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────────────────────
+function renderAll() {
+  updateSummaryStats();
+  populateFilters();
+  renderBrandCards(allProducts);
+  renderPriceMatrix(allProducts);
+  renderArrivals(allProducts);
+  renderLicensed(allProducts);
+}
+
+function updateSummaryStats() {
+  const brands = [...new Set(allProducts.map(p => p.brand))];
+  const licensed = allProducts.filter(p => p.licensed && p.licensed !== 'No').length;
+  const lastDate = allProducts.map(p => p.scrapedOn).filter(Boolean).sort().pop() || '—';
+
+  document.getElementById('stat-total').textContent = allProducts.length.toLocaleString();
+  document.getElementById('stat-brands').textContent = brands.length;
+  document.getElementById('stat-licensed').textContent = licensed.toLocaleString();
+  document.getElementById('stat-updated').textContent = lastDate;
+
+  document.getElementById('badge-brands').textContent = brands.length;
+  document.getElementById('badge-prices').textContent = allProducts.length;
+  document.getElementById('badge-arrivals').textContent = allProducts.filter(p => p.newArrival === 'Yes').length;
+  document.getElementById('badge-licensed').textContent = licensed;
+}
+
+function populateFilters() {
+  const brands = ['', ...new Set(allProducts.map(p => p.brand))].sort();
+  const cats = ['', ...new Set(allProducts.map(p => p.category))].filter(Boolean).sort();
+
+  ['brandFilterPrice','brandFilterArrivals','brandFilterLicensed'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">All Brands</option>' +
+      brands.filter(Boolean).map(b => `<option>${b}</option>`).join('');
+  });
+
+  ['catFilter','catFilterPrice'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '<option value="">All Categories</option>' +
+      cats.map(c => `<option>${c}</option>`).join('');
+  });
+}
+
+// ── BRAND CARDS ─────────────────────────────────────────────────────────────
+function renderBrandCards(products) {
+  const byBrand = {};
+  products.forEach(p => {
+    if (!byBrand[p.brand]) byBrand[p.brand] = [];
+    byBrand[p.brand].push(p);
+  });
+
+  const allBrands = BRANDS.filter(b => byBrand[b]).concat(
+    Object.keys(byBrand).filter(b => !BRANDS.includes(b))
+  );
+
+  if (allBrands.length === 0) {
+    document.getElementById('brandCardsContainer').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No data yet</h3>
+        <p>Run the scraper to collect competitor data, or add products manually to your Google Sheet.</p>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('brandCardsContainer').innerHTML =
+    `<div class="brand-grid">${allBrands.map(brand => buildBrandCard(brand, byBrand[brand])).join('')}</div>`;
+}
+
+function buildBrandCard(brand, products) {
+  const prices = products.map(p => parseFloat(p.price)).filter(n => !isNaN(n) && n > 0);
+  const minP = prices.length ? Math.min(...prices) : 0;
+  const maxP = prices.length ? Math.max(...prices) : 0;
+  const licensed = products.filter(p => p.licensed && p.licensed !== 'No').length;
+  const cats = [...new Set(products.map(p => p.category))].filter(Boolean).slice(0, 5);
+  const newCount = products.filter(p => p.newArrival === 'Yes').length;
+  const latestCount = products.filter(p => p.seasonStatus === 'Latest Season').length;
+  const oldCount = products.filter(p => p.seasonStatus === 'Old Season').length;
+
+  return `
+    <div class="brand-card">
+      <div class="brand-card-header">
+        <div class="brand-name">${brand}</div>
+        <div class="brand-count">${products.length} products</div>
+      </div>
+      <div class="brand-card-body">
+        <div class="brand-stat-row">
+          <span class="brand-stat-key">Price range</span>
+          <span class="brand-stat-val price">₹${minP.toLocaleString()} – ₹${maxP.toLocaleString()}</span>
+        </div>
+        <div class="brand-stat-row">
+          <span class="brand-stat-key">Licensed products</span>
+          <span class="brand-stat-val licensed">${licensed > 0 ? licensed + ' found' : 'None'}</span>
+        </div>
+        <div class="brand-stat-row">
+          <span class="brand-stat-key">New this month</span>
+          <span class="brand-stat-val">${newCount}</span>
+        </div>
+        ${(latestCount > 0 || oldCount > 0) ? `
+        <div class="brand-stat-row">
+          <span class="brand-stat-key">Season mix</span>
+          <span class="brand-stat-val">
+            ${latestCount > 0 ? `<span style="color:var(--ucb-green)">🟢 ${latestCount} latest</span>` : ''}
+            ${latestCount > 0 && oldCount > 0 ? ' · ' : ''}
+            ${oldCount > 0 ? `<span style="color:var(--ucb-mid)">⚪ ${oldCount} old</span>` : ''}
+          </span>
+        </div>` : ''}
+        <div class="brand-cats">
+          ${cats.map(c => `<span class="cat-tag">${c}</span>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── PRICE MATRIX ────────────────────────────────────────────────────────────
+function renderPriceMatrix(products) {
+  const map = {};
+  products.forEach(p => {
+    const key = `${p.brand}||${p.category}`;
+    if (!map[key]) map[key] = { brand: p.brand, category: p.category, prices: [] };
+    const pr = parseFloat(p.price);
+    if (!isNaN(pr) && pr > 0) map[key].prices.push(pr);
+  });
+
+  const rows = Object.values(map)
+    .filter(r => r.prices.length > 0)
+    .map(r => ({
+      brand: r.brand, category: r.category,
+      min: Math.min(...r.prices), max: Math.max(...r.prices),
+      avg: Math.round(r.prices.reduce((a,b)=>a+b,0)/r.prices.length),
+      count: r.prices.length
+    }));
+
+  const tbody = document.getElementById('priceTableBody');
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--ucb-mid)">No price data available yet</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="td-brand">${r.brand}</td>
+      <td><span class="cat-tag">${r.category}</span></td>
+      <td class="td-price">₹${r.min.toLocaleString()}</td>
+      <td class="td-price">₹${r.max.toLocaleString()}</td>
+      <td class="td-price">₹${r.avg.toLocaleString()}</td>
+      <td>${r.count}</td>
+    </tr>`).join('');
+}
+
+// ── NEW ARRIVALS (image tile grid, organised by UCB taxonomy) ──────────────
+let allArrivals = [];
+
+// UCB's merchandising taxonomy — mirrors the scraper's classification exactly,
+// so the dashboard's segregation matches how products were actually tagged.
+const UCB_TAXONOMY = {
+  Boys: {
+    Tops: ['T-Shirts', 'Polos', 'Shirts', 'Sweatshirts', 'Sweaters'],
+    Bottoms: ['Jeans', 'Trousers', 'Shorts'],
+    Outerwear: ['Jackets'],
+    Accessories: ['Caps', 'Neck Accessories'],
+  },
+  Girls: {
+    Tops: ['Tees', 'Tops', 'Polos', 'Sweatshirts', 'Sweaters'],
+    Bottoms: ['Jeans', 'Trousers', 'Shorts', 'Skirts'],
+    Dresses: ['Dresses', 'Sweatdresses'],
+    Outerwear: ['Jackets'],
+    'One Piece': ['Dungarees'],
+    Accessories: ['Caps', 'Neck Accessories', 'Earrings', 'Hair Accessories'],
+  },
+};
+
+// Selection state for the cascading filter
+let selectedDept = '';
+let selectedCategory = '';
+let selectedSubcategory = '';
+
+function renderArrivals(products) {
+  allArrivals = products.filter(p => p.newArrival === 'Yes');
+
+  // Populate brand filter options
+  const brands = [...new Set(allArrivals.map(p => p.brand))].sort();
+  const brandSel = document.getElementById('brandFilterArrivals');
+  brandSel.innerHTML = '<option value="">All Brands</option>' + brands.map(b => `<option>${b}</option>`).join('');
+
+  // Reset taxonomy selection on fresh data load
+  selectedDept = '';
+  selectedCategory = '';
+  selectedSubcategory = '';
+  renderCategoryRow();
+  renderSubcategoryRow();
+
+  renderArrivalTiles(allArrivals);
+}
+
+// ── DEPARTMENT TOGGLE ──
+function selectDepartment(dept) {
+  selectedDept = dept;
+  selectedCategory = '';
+  selectedSubcategory = '';
+
+  document.querySelectorAll('#deptToggle .dept-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.dept === dept);
+  });
+
+  renderCategoryRow();
+  renderSubcategoryRow();
+  filterArrivalTiles();
+}
+
+// ── CATEGORY ROW (depends on selected department) ──
+function renderCategoryRow() {
+  const row = document.getElementById('categoryRow');
+
+  if (!selectedDept) {
+    // "All" departments selected — show the union of categories from both, deduplicated
+    const allCats = [...new Set([...Object.keys(UCB_TAXONOMY.Boys), ...Object.keys(UCB_TAXONOMY.Girls)])];
+    row.innerHTML = allCats.map(cat => `
+      <button class="taxonomy-btn ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>
+    `).join('');
+    return;
+  }
+
+  const cats = Object.keys(UCB_TAXONOMY[selectedDept] || {});
+  row.innerHTML = cats.map(cat => `
+    <button class="taxonomy-btn ${selectedCategory === cat ? 'active' : ''}" onclick="selectCategory('${cat}')">${cat}</button>
+  `).join('');
+}
+
+function selectCategory(cat) {
+  selectedCategory = selectedCategory === cat ? '' : cat;  // click again to deselect
+  selectedSubcategory = '';
+  renderCategoryRow();
+  renderSubcategoryRow();
+  filterArrivalTiles();
+}
+
+// ── SUBCATEGORY ROW (depends on selected category) ──
+function renderSubcategoryRow() {
+  const row = document.getElementById('subcategoryRow');
+
+  if (!selectedCategory) {
+    row.innerHTML = '';
+    return;
+  }
+
+  // Gather subcategories for this category from whichever department(s) are in scope
+  let subcats = [];
+  if (selectedDept) {
+    subcats = UCB_TAXONOMY[selectedDept]?.[selectedCategory] || [];
+  } else {
+    const boysSubs = UCB_TAXONOMY.Boys[selectedCategory] || [];
+    const girlsSubs = UCB_TAXONOMY.Girls[selectedCategory] || [];
+    subcats = [...new Set([...boysSubs, ...girlsSubs])];
+  }
+
+  row.innerHTML = subcats.map(sub => `
+    <button class="taxonomy-btn ${selectedSubcategory === sub ? 'active' : ''}" onclick="selectSubcategory('${sub}')">${sub}</button>
+  `).join('');
+}
+
+function selectSubcategory(sub) {
+  selectedSubcategory = selectedSubcategory === sub ? '' : sub;  // click again to deselect
+  renderSubcategoryRow();
+  filterArrivalTiles();
+}
+
+function renderArrivalTiles(list) {
+  const grid = document.getElementById('arrivalsGrid');
+
+  if (list.length === 0) {
+    grid.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="empty-icon">🆕</div>
+        <h3>No new arrivals found</h3>
+        <p>Try adjusting your filters, or check back after the next scrape.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(p => {
+    const isLatest = p.seasonStatus === 'Latest Season';
+    const priceVal = parseFloat(p.price);
+    const priceDisplay = !isNaN(priceVal) ? `₹${priceVal.toLocaleString()}` : '—';
+    const hasImage = p.image && p.image.startsWith('http');
+
+    return `
+      <div class="arrival-tile">
+        <div class="arrival-tile-img-wrap">
+          ${p.season ? `<span class="arrival-tile-badge ${isLatest ? '' : 'old'}">${isLatest ? '🟢' : '⚪'} ${p.season}</span>` : ''}
+          ${hasImage
+            ? `<img class="arrival-tile-img" src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;arrival-tile-noimg&quot;>🖼️</div>'">`
+            : `<div class="arrival-tile-noimg">🖼️</div>`
+          }
+        </div>
+        <div class="arrival-tile-body">
+          <div class="arrival-tile-brand">${p.brand}</div>
+          <div class="arrival-tile-name">${p.name}</div>
+          <div class="arrival-tile-footer">
+            <span class="arrival-tile-price">${priceDisplay}</span>
+            ${p.url && p.url !== '#' ? `<a class="arrival-tile-link" href="${p.url}" target="_blank">View ↗</a>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterArrivalTiles() {
+  const q = (document.getElementById('arrivalsSearch')?.value || '').toLowerCase();
+  const brand = document.getElementById('brandFilterArrivals').value;
+  const season = document.getElementById('seasonFilterArrivals').value;
+  const sortBy = document.getElementById('sortFilterArrivals').value;
+
+  let filtered = allArrivals.filter(p =>
+    (!q || p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q)) &&
+    (!brand || p.brand === brand) &&
+    (!selectedDept || p.department === selectedDept) &&
+    (!selectedCategory || p.category === selectedCategory) &&
+    (!selectedSubcategory || p.subcategory === selectedSubcategory) &&
+    (!season || p.seasonStatus === season)
+  );
+
+  if (sortBy === 'price_asc') {
+    filtered = [...filtered].sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+  } else if (sortBy === 'price_desc') {
+    filtered = [...filtered].sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
+  }
+
+  renderArrivalTiles(filtered);
+}
+
+// ── LICENSED ──────────────────────────────────────────────────────────────────
+function renderLicensed(products) {
+  const licensed = products.filter(p => p.licensed && p.licensed !== 'No');
+  const container = document.getElementById('licensedContainer');
+
+  if (licensed.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🏷️</div>
+        <h3>No licensed products found</h3>
+        <p>Licensed products (Disney, Marvel, Barbie etc.) will appear here once scraped.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="licensed-grid">${
+    licensed.map(p => `
+      <div class="licensed-card">
+        <div class="licensed-card-top">
+          <div class="licensed-name">${p.name}</div>
+          <div class="licensed-price">₹${parseFloat(p.price).toLocaleString() || '—'}</div>
+        </div>
+        <div class="licensed-meta">
+          <span class="badge badge-licensed">🏷 ${p.licensed}</span>
+          <span class="badge" style="background:var(--ucb-light);color:var(--ucb-mid)">${p.brand}</span>
+          <span class="cat-tag">${p.category || '—'}</span>
+          ${p.url && p.url !== '#' ? `<a href="${p.url}" target="_blank" style="font-size:12px;color:var(--ucb-teal);text-decoration:none">View ↗</a>` : ''}
+        </div>
+      </div>`).join('')
+  }</div>`;
+}
+
+// ── FILTERING ─────────────────────────────────────────────────────────────────
+function applyBrandFilters() {
+  const q = document.getElementById('brandSearch').value;
+  const cat = document.getElementById('catFilter').value;
+  const genderEl = document.querySelector('.filters-row select[onchange*="filterByGender"]');
+  const gender = genderEl ? genderEl.value : '';
+  const season = document.getElementById('seasonFilter').value;
+
+  const filtered = allProducts.filter(p =>
+    (!q || p.brand.toLowerCase().includes(q.toLowerCase()) || p.name.toLowerCase().includes(q.toLowerCase())) &&
+    (!cat || p.category === cat) &&
+    (!gender || p.gender === gender) &&
+    (!season || p.seasonStatus === season)
+  );
+  renderBrandCards(filtered);
+}
+
+function filterBrands(q) { applyBrandFilters(); }
+function filterByCategory(cat) { applyBrandFilters(); }
+function filterByGender(gender) { applyBrandFilters(); }
+function filterBySeason(status) { applyBrandFilters(); }
+
+function filterTable(tableId, q) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = !q || text.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterTableByCol(tableId, colIdx, val) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  rows.forEach(row => {
+    const cell = row.cells[colIdx];
+    const text = cell ? cell.textContent.trim() : '';
+    row.style.display = !val || text === val || text.includes(val) ? '' : 'none';
+  });
+}
+
+function filterLicensed(q) {
+  const cards = document.querySelectorAll('.licensed-card');
+  cards.forEach(card => {
+    card.style.display = !q || card.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function filterLicensedByBrand(brand) {
+  const cards = document.querySelectorAll('.licensed-card');
+  cards.forEach(card => {
+    card.style.display = !brand || card.textContent.includes(brand) ? '' : 'none';
+  });
+}
+
+// ── SORT TABLE ────────────────────────────────────────────────────────────────
+let sortState = {};
+function sortTable(tableId, col) {
+  const key = `${tableId}-${col}`;
+  sortState[key] = !sortState[key];
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  const rows = Array.from(tbody.rows);
+  rows.sort((a, b) => {
+    const av = a.cells[col]?.textContent.replace(/[₹,]/g,'').trim() || '';
+    const bv = b.cells[col]?.textContent.replace(/[₹,]/g,'').trim() || '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    const cmp = !isNaN(an) && !isNaN(bn) ? an - bn : av.localeCompare(bv);
+    return sortState[key] ? cmp : -cmp;
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+  currentTab = name;
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+// Default Sheet — auto-loads for any visitor with zero setup.
+// Uses Google's gviz/tq endpoint instead of publish-to-web CSV —
+// gviz sends proper CORS headers so fetch() works from any domain (e.g. GitHub Pages).
+// Requires the Sheet's general access to be "Anyone with the link" (Viewer).
+const DEFAULT_CSV_URL = "https://docs.google.com/spreadsheets/d/1MbpXe-OOScp7YQy_RTgTglYW7Wnu7GtxvF3rJbfueLQ/gviz/tq?tqx=out:csv&gid=1210679381";
+
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('ucb_csv_url');
+  // Only trust a saved link if it's the current gviz endpoint format — anything else (old pub?output=csv links) is stale
+  const url = (saved && saved.includes('/gviz/tq')) ? saved : DEFAULT_CSV_URL;
+  localStorage.setItem('ucb_csv_url', url);
+  document.getElementById('csvUrlInput').value = url;
+  document.getElementById('setupModal').style.display = 'none';
+  setStatus('loading', 'Loading...');
+  fetchAndRender(url);
+});
+</script>
+</body>
+</html>
